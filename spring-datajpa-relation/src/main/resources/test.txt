@@ -1,0 +1,925 @@
+﻿はじめに
+1. 目的
+Javaアプリ開発に必要なＰＣ開発環境および各種サーバの構築方法を習得する。
+
+2. 到達目標レベル
+各種構成要素手順書（ＤＬできるもの、プロジェクト固有など）を見ながら、一人で開発環境を準備できる。
+
+3. 前提知識
+平成１３年度以降入社社員（新入社員研修でJavaの研修を受けたことがある）程度
+
+4. コースで使用するソフトウェア
+Java SE 1.7
+Subversion
+TortoiseSVN
+Tomcat 7.0
+Scene Builder
+Eclipse IDE for Java EE Developers（日本語化pleiades）
+(以下はEclipseプラグイン)
+Subversive
+JUnit4
+djUnit
+e(fx)clipse
+WTP
+5. 
+ソフトウェア・技術マップ
+
+目次
+目次	4
+第1章	Subversion	5
+1.1.	Subversionとは	5
+1.2.	SVNサーバ構築（Windows）	6
+1.3.	SVNでのソース管理	14
+第2章	SVNクライアント	15
+2.1.	TortoiseSVNのセットアップ	15
+2.2.	TortoiseSVNを使ったリポジトリアクセス	17
+第3章	Java開発環境	23
+3.1.	Javaのインストール	23
+3.2.	Eclipseのセットアップ	24
+3.3.	Subversive	29
+3.4.	JUnitテスト	33
+3.5.	djUnit	37
+第4章	JavaFX	40
+4.1.	JavaFX開発環境	40
+第5章	Tomcat	44
+5.1.	Tomcatサーバ設定（Eclipse WTP）	44
+5.2.	Tomcatサーバ設定（Windows）	48
+
+第1章 
+Subversion
+1.1. Subversionとは
+■Subversion（サブバージョン; SVN）
+プログラムのソースコードなどを管理する集中型バージョン管理システム
+主に次のような機能がある
+?ファイルの作成日時、変更日時、変更点などの履歴を保管
+　　→過去の状態や変更内容の確認、変更前の状態に復元することが可能
+?複数人でのファイル編集の管理
+　　→編集状態の確認や他の作業者の変更と競合が起こっていないか確認可能
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+　図　ＳＶＮの利用イメージ
+■用語説明
+リポジトリ：バージョン管理したいフォルダやファイルの履歴が格納される場所
+　　　　　　一般的にはサーバ上に置かれる
+作業コピー：リポジトリ内で管理されているファイルを変更したい場合、一度作業者ＰＣにダウンロードしてから変更する。このときのダウンロードしたフォルダやファイルのこと
+チェックアウト：リポジトリ内のフォルダやファイルを指定して作業者ＰＣ上にダウンロードし、作業コピーを作成すること
+コミット：作業コピーに対して行われた変更を、リポジトリへ反映すること
+アップデート：他者がコミットを行った変更を自分の作業コピーへ取り込むこと
+　　　　　　　常にフォルダやファイルを最新の状態に保ち、競合が起きにくくする
+インポート：作業者ＰＣ上で作成したフォルダやファイルをリポジトリに登録すること
+1.2. 
+SVNサーバ構築（Windows）
+■Subversionのダウンロード
+以下のサイトから最新版バイナリ（win32）をダウンロードする
+http://subversion.tigris.org/servlets/ProjectDocumentList?folderID=91
+
+-subversion
+  -Releases
+    -Windows Binaries
+       -1.6.x (archived,win32,apache 2.2.x)
+
+
+
+■Subversionのインストール
+Setup-Subversion-1.6.6.msi（インストーラ）を実行する
+　途中のインストール場所はデフォルト
+　この画面で「Finish」を押下して終了
+
+
+【参考】環境変数の設定（msiインストール時は不要）
+「スタートメニュー」⇒「コントロールパネル」⇒「システムとセキュリティ」
+⇒「システム」⇒「システムの詳細設定」⇒「環境変数」を実行する
+システム環境変数のPathを選択して「編集」を押下する
+変数値に「C:\Program Files\Subversion\bin」を設定する
+
+msiファイルによってインストールした場合、既に設定済みなので確認する
+
+■リポジトリ作成
+コマンドプロンプトからリポジトリの作成コマンド(svnadmin create)を実行する
+（この例だと、C:\svn\sampleがリポジトリ）
+
+mkdir c:\svn                          #ディレクトリを作成
+svnadmin create c:\svn\sample        #リポジトリを登録
+
+■他のコマンドついて
+　svnadmin help を参照してください。
+■ユーザとアクセス権
+デフォルトの設定では読み取り専用でしかリポジトリにアクセスできないので、任意ユーザに対して書き込み権限を設定する
+リポジトリ配下\conf\svnserve.confをテキストエディタ（メモ帳）で開き記述を変更する
+
+[general]
+anon-access = none                    #ユーザ認証なしアクセス権（アクセス不可）
+auth-access = write                    #ユーザ認証したアクセス権（読み書き可能）
+password-db = passwd                 #パスワードファイルの場所（相対パス）
+
+
+password-dbで指定したパスワードファイルを編集し、ユーザとパスワードを設定する
+リポジトリ配下\conf\passwdをテキストエディタ（メモ帳）で開き記述を変更する
+
+[users]
+member1 = password1                 #ユーザ名＝パスワード
+member2 = password2
+
+■svnserve.confで設定可能なアクセス権
+　read：読み取り可
+　write：読み書き可
+  none：接続拒否
+
+■Windowsのサービスとして常駐させる
+SVNサーバとして利用するため、Windowsのサービスとして常駐させる
+コマンドプロンプトを管理者として実行し、次のscコマンドを入力
+
+sc create svnserve binpath= "C:\Program Files\Subversion\bin\svnserve.exe --service -r C:\svn" start= auto DisplayName= "Subversion:svnserve" 
+# svnserveとしてサービス登録
+
+また、サービス登録した直後は起動していないので、起動させる必要がある
+sc start svnserve                #サービス起動
+
+■その他のscコマンド
+　sc stop svnserve　　　　　　　#サービス停止
+　sc query svnserve             #サービス状態確認
+　sc delete svnserve             #サービス削除
+　　　　　　　　　　　　　　　（サービス登録をやり直す場合、削除してからやり直す）
+　　　　　　　　　　　　　　　
+
+■SVNサーバ接続確認
+登録したユーザとパスワードでログイン（ユーザ認証）できるか確認する
+
+svn info svn://localhost/sample --username member1         #svnコマンドを入力
+認証領域: <svn://localhost:3690> f6f23ab2-a48b-4f4e-abad-2a4d5g7acf1
+'member1' のパスワード: *******
+（ユーザ認証成功の場合）
+パス: sample
+URL: svn://localhost/sample
+リポジトリのルート: svn://localhost/sample
+リポジトリUUID: f6f23ab2-a48b-4f4e-abad-2a4d5g7acf1
+リビジョン: 0
+ノード種別: ディレクトリ
+最終変更リビジョン: 0
+最終変更日時: 2014-06-30 13:52:06 +0900 (月, 30 6 2014)
+
+（ユーザ認証失敗の場合）
+svn：サーバの認証エラーです：Password incorrect
+
+■接続プロトコルの種類
+SVNには、以下のようなURLを指定して接続することができる
+プロトコル
+概要
+用途
+file:///
+SVNリポジトリへの直接アクセス
+ローカル
+svn://
+svnserveへの独自プロトコル経由アクセス
+社内
+svn+ssh://
+svn:// と同じだが SSH トンネルを利用
+
+http://
+Apacheを経由したウェブアクセス
+インターネット経由
+https://
+http://と同じだが SSL で暗号化
+
+
+
+■ユーザ認証のキャッシュ無効化
+初期設定の場合は一度ユーザ認証が成功するとサーバ側にキャッシュが残るため、次回からパスワード入力を求められない
+キャッシュ残さないように次のファイルを変更する
+（一度ユーザ認証を成功させてから実行する）
+C:\Users\User(※1) \AppData(※2)\Roaming\Subversion\config
+(WindowsVista/7の場合)
+
+[auth]
+store-passwords = no　　　　　　　　　#パスワードのキャッシュを保存しない
+
+既に一度ログインしているので次のディレクトリ配下のキャッシュを削除する
+C:\Users\User(※1) \AppData(※2)\Roaming\Subversion \auth\ svn.simple\
+
+※1ユーザ名が入る
+※2 隠しファイルなのでアドレスバー直接「AppData」と入力するか、隠しファイルを表示させる設定に変える
+
+
+
+演習1-1
+次の条件でsvnサーバを構築し、svnプロトコルでアクセスせよ
+リポジトリ名	      ：practice
+登録ユーザ／パスワード：yamada／taro*1、abe／hanako*2、tanaka／jiro*3
+プロトコル            ：独自プロトコル(svn:// )
+
+【実行結果】
+>svn info svn://localhost/practice --username tanaka
+認証領域: <svn://localhost:3690> 5c83d988-5555-564d-9e1e-c13658bde888
+'tanaka' のパスワード: ******
+パス: practice
+URL: svn://localhost/practice
+リポジトリのルート: svn://localhost/practice
+リポジトリ UUID: 5c83d988-5555-564d-9e1e-c13658bde888
+リビジョン: 0
+ノード種別: ディレクトリ
+最終変更リビジョン: 0
+最終変更日時: 2014-07-11 14:33:19 +0900 (金, 11 7 2014)
+
+
+1.3. 
+SVNでのソース管理
+■一般的なソース管理方法
+一般的なリポジトリ構造はプロジェクト毎にtrunk、branches、tagsのディレクトリを作成しソース管理する
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+■各種ディレクトリの作成
+Svnコマンドで各ディレクトリを作成する
+
+svn mkdir --username member1 svn://localhost/sample/trunk -m "トランク新規作成"
+svn mkdir --username member1 svn://localhost/sample/branches -m "ブランチ新規作成"
+svn mkdir --username member1 svn://localhost/sample/tags -m "タグ新規作成"
+
+第2章 
+SVNクライアント
+2.1. TortoiseSVNのセットアップ
+■TortoiseSVNのダウンロード
+TortoiseSVNは、オープンソースのWindows用Subversionクライアントソフト
+エクスプローラでファイルやフォルダを操作する様にGUIを使ったSubversion のバージョン管理ができる
+言語パック（Language Packs）をインストールすることで日本語化可能
+
+公式サイトから最新版バイナリ（for 32-bit OS）をダウンロードする
+http://tortoisesvn.net/downloads.html
+
+
+同じページから日本語の言語パックもダウンロードする
+
+
+
+
+■TortoiseSVNインストール
+TortoiseSVN 本体TortoiseSVN-1.8.7.25475-win32-svn-1.8.9.msiを実行する
+続いて日本語の言語パックLanguagePack_1.8.7.25475-win32-ja.msiを実行する
+「Finish」を押下して終了
+
+エクスプローラ上で右クリック→TortoiseSVN→Settingsで設定画面を表示し、Languageで日本語を適用する
+
+
+もう一度、エクスプローラ上で右クリックするとTortoiseSVNのメニューが日本語化されているのが確認できる
+
+アイコンオーバーレイ機能等を有効にするためにＰＣを再起動する。
+
+2.2. 
+TortoiseSVNを使ったリポジトリアクセス
+■リポジトリブラウザ
+右クリックでTortoiseSVNメニューを呼び出し、リポジトリブラウザを実行
+
+SVNサーバ側で設定したURLを入力する
+
+ユーザ名とパスワードを入力してOK、エラーが出なかったら正常
+trunk、branches、tagsのディレクトリが表示される
+
+■インポート
+リポジトリブラウザ上にファイルをドラッグするだけでインポートすることが出来る
+
+
+
+
+
+■チェックアウト
+右クリック→SVNチェックアウト
+リポジトリのURL、チェックアウト先を指定する
+
+チェックアウト先に作業コピーが作成される
+インストール後にPCを再起動していれば、エクスプローラのアイコンオーバーレイ機能が有効になる（詳細はTortoiseSVNのヘルプ4.1.1.アイコンオーバーレイを参照）
+
+■アップデート
+複数人でリポジトリを共有している場合、アップデートすることで作業コピーに他の作業者の更新を反映することが出来る
+最新化したいファイルを選択して右クリック→SVN更新
+
+ファイルが最新化される
+■コミット
+作業コピーのファイルを編集した後で、コミットを行うことでリポジトリに編集内容を反映する
+作業コピー上で編集したファイルを選択して右クリック→SVNコミット
+
+メッセージに更新内容を記載してOKボタンを押下
+
+
+コミットが完了し、リポジトリが更新される
+
+
+■ロック
+ロックを取得することで編集中のファイルを他のメンバーがコミットできないようにする
+作業コピー上で対象ファイルを選択して右クリック→TortoiseSVN→ロックを取得
+
+メッセージに更新内容を記載してOKボタンを押下
+
+ユーザIDパスワードを入力するとロックの取得が完了し、
+リポジトリブラウザのロックの列にロックを取得したユーザが表示される
+
+ロックを取得したユーザがコミットするとロックが解除される
+
+また、ロック取得中に以下の操作でロックを解除することが出来る
+作業コピー上で対象ファイルを選択して右クリック→TortoiseSVN→ロックを解除
+
+■認証の保存を解除してユーザ変更したい場合
+エクスプローラ上で右クリック→「TortoiseSVN」→「設定」で設定画面を表示し
+「保存されたデータ」の認証データの「消去」または「すべて消去」ボタンを押下する。
+
+演習2-1
+ローカルディスク上に作業コピーを作成し、ファイル編集後にコミットできることを確認せよ
+
+【実行結果】
+
+
+演習2-2
+作業コピー上のファイルにロックをかけた後で編集を行い、別ユーザでコミットできないことを確認せよ
+
+【実行結果】
+
+第3章 
+Java開発環境
+3.1. Javaのインストール
+■JDKのインストール
+Java SE 7 JDKを次のサイトからダウンロードしインストールする
+http://www.oracle.com/technetwork/java/javase/downloads/index.html
+
+JDK→JREの順番にインストールされる
+
+JavaについてはSEの他にもEEやMEがあり、開発対象の用途により使い分ける
+
+■環境変数の設定
+Javaプログラムの実行やコンパイルをするためにシステム環境変数PATHを設定する
+また、Java使用する一部のアプリケーションで必要となるJAVA_HOMEも設定する
+環境変数名
+設定内容
+設定例（xxはバージョン）
+JAVA_HOME
+JDKのインストールディレクトリ
+C:\Program Files\Java\jdk1.7.0_xx
+PATH
+JDKのコマンドがあるディレクトリ（bin）
+C:\Program Files\Java\jdk1.7.0_xx\bin
+
+3.2. 
+Eclipseのセットアップ
+■Eclipseのダウンロード
+Javaの統合開発環境(IDE)であるEclipseを導入する
+今回は各種プラグイン導入済みのEclipse IDE for Java EE Developersを利用する
+
+以下のダウンロードサイトにアクセスしてEclipse Kepler 4.3のパッケージを表示する
+http://www.eclipse.org/downloads/
+
+Eclipse IDE for Java EE DevelopersのWindows 32-bit版をダウンロードする
+ダウンロードが終わったらzipファイルをCドライブ（C:）直下に解凍する
+
+
+
+■Eclipseの日本語化
+Eclipseの日本語化プラグインである Pleiadesを導入するため以下のサイトにアクセス
+http://mergedoc.sourceforge.jp/
+
+
+念のため安定板のpleiades-1.5.0（srcで無い方）をダウンロードする
+ダウンロードが終わったらzipファイルを解凍する
+
+readmeの中にあるreadme_pleiades.txtのインストール方法に従って
+plugins、featuresディレクトリのコピーとeclipse.iniの編集を行う
+
+
+
+■Eclipseの設定
+解凍した実行ファイルC:\eclipse\eclipse.exeを実行する
+
+ワークスペース・ランチャーのウィンドウが表示される
+ワークスペースを「C:\workspace」に設定してOKをクリック
+
+
+ワークスペースが作成され、しばらくすると起動する
+
+
+「ウィンドウ」→「設定」→「一般」→「ワークスペース」を選択する
+テキスト・ファイルのエンコードでその他の「UTF-8」を選択して「適用」を押下する
+
+
+
+
+■外部JREの登録
+Eclipse上でプログラムを実行する際に使用されるJREを設定する
+「ウィンドウ」→「設定」→「Java」→「インストール済みのJRE」を選択する
+「追加」ボタンクリックして標準VMを選択するとJREの追加画面が表示されるので
+JREホームにJREをインストールしたディレクトリ(C:\Program Files\Java\jre7)指定して「完了」を押す
+
+インストール済みのJREの画面で登録したJREのチェックボックスを選択してOK
+
+
+
+
+■コンパイラの設定
+Java の言語仕様は、バージョンにより微妙な差異があるので開発対象バージョンに合わせてEclipse上のコンパイラを設定する
+「ウィンドウ」→「設定」→「Java」→「コンパイラー」を選択する
+JDK準拠の「コンパイラー準拠レベル」プルダウンのバージョン（今回の研修では1.7）を選択して適用を押下する
+
+
+Eclipse の Java 開発用のプラグインである JDT（Java Development Tools）の中に、「ECJ (Eclipse Compiler for Java)」という Eclipse 独自のコンパイラが含まれている
+
+■行番号の表示
+Eclipse上のエディタで行番号を表示するには
+「ウィンドウ」→「設定」→「エディター」→「テキスト・エディター」を選択し
+「行番号の表示」をチェックした状態で適用を押下する
+
+
+
+【参考】新規プロジェクト作成～コーディング～実行まで
+①Javaのパースペクティブを開く（既に選択されている場合は不要）
+「ウィンドウ」→「パースペクティブを開く」→「その他」
+
+パースペクティブを開く画面で「Java」を選択して「OK」を押下する
+
+
+②Javaプロジェクト作成
+「ファイル」→「新規」→「Javaプロジェクト」を選択
+Javaプロジェクトの作成画面で「プロジェクト名」を入力して「完了」を押下する
+
+
+③パッケージ作成
+プロジェクトを選択した状態で「ファイル」→「新規」→「パッケージ」を選択
+Javaパッケージ画面で「名前」を入力して「完了」を押下する
+
+
+④クラス作成
+パッケージを選択した状態で「ファイル」→「新規」→「クラス」を選択
+「名前」を入力して「完了」を押下する。
+
+クラスが作成されるのでコーディングを行う
+
+
+⑤実行
+クラスを選択して右クリック→「実行」→「Javaアプリケーション」を選択する
+3.3. 
+Subversive
+■Subversiveについて
+Subversiveプラグインを導入することにより、Eclipse上でSVNを利用したバージョン管理が行えるようになる
+
+■Subversive未導入のEclipseにインストールする場合
+Eclipseの「ヘルプ」→「新規ソフトウェアのインストール」
+作業対象のプルダウンで「Kepler - http://download.eclipse.org/releases/kepler」を選択
+
+コラボレーション内の以下の２項目にチェックを入れて「次へ」を押下
+・「Subversive SVN チーム・プロバイダー」
+・「Subversive SVN チーム・プロバイダー・ローカライゼーション(オプション)」
+
+後は画面の指示に従ってインストールしてEclipseを再起動する
+
+「ウィンドウ」→「設定」→「チーム」→「ＳＶＮ」を選択すると
+自動的にSubversive SVNコネクターインストール画面が呼び出されるので
+SVNバージョンに対応した「SVNKit」を選択し、指示に従ってインストールする
+（画面を閉じてしまった場合は「新規ソフトウェアのインストール」の作業対象に「http://community.polarion.com/projects/subversive/download/eclipse/3.0/kepler-site/」を入力し、「SVNKit」をインストールする。）
+
+複数コネクターをインストールした場合は「ウィンドウ」→「設定」→「チーム」
+→「ＳＶＮ」の「ＳＶＮクライアント」のタブでＳＶＮコネクターを選択できる
+
+
+■SVNリポジトリの登録
+まず、SVNリポジトリー・エクスプローラーを開く
+「ウィンドウ」→「パースペクティブを開く」→「その他」→「SVNリポジトリー・エクスプローラー」
+
+新規リポジトリー・ロケーションのアイコンをクリックする
+
+
+一般タブで「URL：」にSVNサーバで設定したリポジトリのURL、
+「ユーザー」にユーザ名、「パスワード」に対応するパスワードを入力する
+
+
+SVNリポジトリが登録される
+
+
+■ローカルプロジェクト登録
+Eclipse上のローカルプロジェクトをSVNに登録する
+パッケージ・エクスプローラー上で登録したいプロジェクトを選択し右クリック
+「チーム」→「プロジェクトの共用」を選択する
+次の画面でリポジトリー・タイプに「SVN」を選択して「次へ」
+「既存のリポジトリー・ロケーション」を選択して「次へ」
+「拡張モード」を選択し、「完了」を押下する
+
+コミット・コメントが求められるので入力して「OK」を押下する
+
+SVNリポジトリ・エクスプローラーで確認するとプロジェクトが追加される
+
+
+■チェックアウト
+SVNリポジトリ上のプロジェクトを作業コピーとしてチェックアウトする
+SVNリポジトリー・エクスプローラーからチェックアウト対象のプロジェクトを選択し、
+右クリック→「チェックアウト」を実行する
+
+
+パッケージ・エクスプローラー上に作業コピーがチェックアウトされる
+
+
+参照ライブラリーが不足している場合は必要に応じてビルド・パス構成を設定する
+
+3.4. 
+JUnitテスト
+■JUnitについて
+JUnitはJavaで開発されたプログラムのユニットテスト（単体テスト）を自動化するフレームワークである
+Eclipseで利用する場合はプラグインとして提供されている
+
+■Eclipse標準のJUnitを利用する場合
+テスト対象のプロジェクトを右クリック→「ビルド・パス」→「ライブラリーの追加」→「JUnit」を選択して次へ
+Junitライブラリー・バージョンを「JUnit4」選択する
+
+【参考】指定したJUnitを利用する場合
+JUnitは今回使用するEclipseには標準で入っているので基本的に別途準備不要だが、
+指定したJUnitを使う場合（プロジェクトで使用するJUnitのバージョンを合わせたい場合など）はGitHubのサイトからjunit.jarをダウンロードしてくる必要がある
+https://github.com/junit-team/junit/wiki/Download-and-Install
+
+ダウンロードしたjunit.jarを任意の場所に置く（仮にC:\junit\に置く)
+テスト対象のプロジェクトを右クリック→「ビルド・パス」→「ライブラリーの追加」→「ユーザー・ライブラリー」を選択して次へ、「ユーザー・ライブラリー」ボタン→設定画面が表示される
+「新規」ボタン→ユーザー・ライブラリー名（仮にjunit4）を入力してOK
+登録したライブラリーを選択して「外部jar追加」→ダウンロードしたjunit.jarを登録する
+ライブラリーの追加画面に戻り、登録したライブラリーのチェックボックスを選択する。
+
+
+
+■JUnitテストケースの作り方
+パッケージエクスプローラーでテスト対象のクラスを選択して右クリック
+「新規」→「JUnit テスト・ケース」を選択
+（または「新規」→「その他」→「Java」→「JUnit」→「JUnit テスト・ケース」）
+新規JUnitテストケース画面でJUnitのバージョン(JUnit4)およびメソッド・スタブを選択して次へ
+
+テスト対象のメソッドにチェックを入れて完了を押すとテストケースが作成される
+
+
+
+
+■テスト実装
+テストは、試験する対象メソッドを呼び出し、戻り値（や呼び出し後の状態）が想定した結果になっているかどうかをチェックすることにより行う
+つまり、テスト（@Testを付けた）メソッドの中で、テスト対象メソッドの呼び出しと、戻り値のチェックをコーディングする必要がある
+戻り値のチェックについてはJUnitで用意されているテスト結果判定用メソッド（assertEquals()等のメソッド）を呼び出すことによって行う
+
+また、各テストメソッドの実行前に呼ばれるsetUp（@Beforeを付けた）メソッド等が用意されており、共通の準備作業が必要な場合はコーディングしておく
+
+【参考】テストケースのメソッドは以下のような種類がある
+メソッドの種類
+アノテーション
+説明
+setUpBeforeClass
+メソッド
+@BeforeClass
+このテストクラスの最初のテストメソッドが呼び出される前に実行されるメソッド
+setUpメソッド
+@Before
+各テストメソッドが呼び出される前に実行されるメソッド
+テストメソッド
+@Test
+テスト対象クラスの選択したメソッドクラスに対するテストメソッド
+tearDownメソッド
+@After
+各テストメソッドが呼び出された後に実行されるメソッド
+tearDownAfterClassメソッド
+@AfterClass
+このテストクラスの最後のテストメソッドが呼び出された後に実行されるメソッド
+
+（例）テストメソッドが２つあるときの実行される順番は以下のようになる
+1. setUpBeforeClassメソッド
+2. setUpメソッド
+3. テストメソッド①（※テストメソッド②）
+4. tearDownメソッド
+5. setUpメソッド
+6. テストメソッド②（※テストメソッド①）
+7. tearDownメソッド
+8. tearDownAfterClassメソッド
+
+※テストメソッドの実行順は保障されないので、テストメソッド①→②が実行されることを前提とした実装はしない
+
+【参考】テスト結果判定用メソッド（使用頻度の高いものを抜粋）
+メソッド
+説明
+assertEquals(型 expected, 型 actual)
+expected（期待値）とactual（実行結果）の値が等しい場合、テスト成功(比較はObject.equals()と同様)
+※引数の型はObject,byte,char,String,short,int,long,float,double,
+booleanが指定可能
+assertSame(Object obj1, Object obj2)
+obj1とobj2の値が同一の場合、テスト成功
+(obj1,2の比較は==と同様)
+assertNotSame(Object obj1, Object obj2)
+obj1とobj2の値が同一で無い場合、テスト成功
+(obj1,2の比較は!=と同様)
+assertTrue(boolean flag)
+flagの値がtrueの場合、テスト成功
+assertFalse(boolean flag)
+flagの値がfalseの場合、テスト成功
+assertNull(Object obj)
+objの値がnullの場合、テスト成功
+assertNotNull(Object obj)
+objの値がnullで無い場合、テスト成功
+fail()
+テストの判定結果を失敗にする
+「ここに来たら試験失敗」という箇所に記述する
+
+3.5. 
+djUnit
+■djUnitとは
+djUnitはJUnitにコードのカバレッジ・レポート（テストされたコードとテストされていないコードのレポート）機能を追加するプラグイン
+
+■djUnitのインストール
+以下のサイトにアクセスしてdjUnitプラグインのzipファイルをダウンロードする
+http://works.dgic.co.jp/djwiki/Viewpage.do?pid=@646A556E6974
+
+
+
+ダウンロードしたzipファイルを、Eclipseのpluginsフォルダに解凍して
+Eclipseを再起動する
+
+【参考】別のインストール方法
+Eclipseの「ヘルプ」→「新規ソフトウェアのインストール」
+「追加」ボタンを押下
+名前にdjUnit、ロケーションに「http://works.dgic.co.jp/djunit/update/3.5.x/site.xml」
+と入力してOK
+「djUnit plugin」をチェックして「次へ」を押下
+インストール詳細が開くので「次へ」を押下
+ライセンスのレビューが開くので「同意する」を選択して「完了」を押下
+Eclipseを再起動したらインストール完了
+
+
+■djUnitの設定
+テスト対象のプロジェクトを右クリック→「プロパティ」
+プロジェクトのプロパティが開くのでdjUnitを選択し、カバレッジタブの
+「カバレッジを使用する」にチェック
+djUnitクラスローダータブの「-noverify(VMオプション)を使用する」にチェックする
+
+
+■djUnitテストの実行方法
+Junitのテストクラスをそのまま利用できる
+テストクラスを右クリック→「実行」→「djUnitテスト」を選択で実行
+Junitテストと同様のテスト結果画面が表示される
+
+
+
+■カバレッジ・レポートの確認方法
+「ウィンドウ」→「ビューの表示」→「その他」でビューの表示が開くので
+「djUnit」の「djUnitカバレッジ・レポート」を選択し「OK」を押す
+カバレッジレポートのビュー・メニュー「▽」ボタンからテストクラスのあるプロジェクトを選ぶとdjUnitテストの実行した結果が表示されている
+
+全体、パッケージ毎、ファイル毎のレポートが確認できる
+行の網羅率（%line）と、分岐の網羅率（%branch）が数字とグラフで表示される
+
+演習3-1
+DateUtil.javaクラスを対象とした次のJUnitテストケースを作成せよ。
+・"2014/9/20"　⇒　"平成26年9月20日"に変換される正常系の試験
+・"2014-9-20"　でYYYY/M/D型に一致しないエラーとなる例外の試験
+・"2014/9/33"　で日付が不正エラーとなる例外の試験
+1   package com.example.junit;
+2   import java.text.SimpleDateFormat;
+3   import java.util.Calendar;
+4   import java.util.Locale;
+5   import java.util.regex.Pattern;
+6   
+7   /**
+8    * 日付ユーティリティークラス(JUnitの例題用)
+9    */
+10  public class DateUtil {
+11     
+12      /**
+13       * 西暦（YYYY/M/D）の日付を和暦（年号YY年M月D日）に変換する。
+14       * <br>(実行例）"2014/9/20"　⇒　"平成26年9月20日"
+15       * @param date 西暦：YYYY/M/Dの文字列
+16       * @return　和暦:年号YY年M月D日の文字列
+17       * @throws java.lang.IllegalArgumentException
+18       * 引数がYYYY/M/D型に一致しない場合、または日付が不正な場合　
+19       */
+20      public String convertJpnDate(String date)throws IllegalArgumentException{	
+21          if(!Pattern.matches("^\\d{1,4}/\\d{1,2}/\\d{1,2}", date)){  // 引数チェック
+22              throw new IllegalArgumentException("YYYY/M/D型に一致しません");
+23          }
+24          
+25          // 引数を年、月、日に分割する
+26          String[] ss = date.split("/");
+27          int year = Integer.parseInt(ss[0]);
+28          int month = Integer.parseInt(ss[1]);
+29          int day = Integer.parseInt(ss[2]);
+30          
+31          // カレンダークラスに年、月、日を設定
+32          Calendar cal = Calendar.getInstance();
+33          cal.setLenient(false);
+34          cal.set(year, month-1, day);
+35          
+36          // 「ja_JP_JP」ロケールのカレンダークラスを生成
+37          Locale locale = new Locale("ja", "JP", "JP");
+38          Calendar cal2 = Calendar.getInstance(locale);
+39          cal2.setTime(cal.getTime());
+40          
+41          // 和暦にフォーマットする
+42          SimpleDateFormat jpnFormat = 
+43              new SimpleDateFormat("GGGGy年M月d日", locale);
+44          String dateStr = jpnFormat.format(cal2.getTime());
+45          
+46          return dateStr;
+47      }
+48  }
+
+第4章 
+JavaFX
+4.1. JavaFX開発環境
+■JavaFXとは
+従来のAWTやSwingより、簡単に高度なJavaのGUI開発を行うためのライブラリ
+Java のバージョンが 1.7.0_6 以上なら標準でバンドルされている
+
+■Scene Builder のインストール
+Oracle が提供しているフリーの Java FX 用 GUI デザインツール
+以下のサイトからダウンロードしてインストールを行う
+http://www.oracle.com/technetwork/java/javafx/downloads/index.html
+
+
+■Eclipse プラグイン（e(fx)clipse）のインストール
+「ヘルプ」→「新規ソフトウェアのインストール」
+「最新の使用可能なソフトウェア・バージョンのみ表示」のチェックを外しておき
+作業対象に以下のサイトを入力
+「http://download.eclipse.org/modeling/tmf/xtext/updates/composite/releases/」
+
+「Xtext」→「Xtext SDK 2.5.0」
+「Xtend」→「Xtend SDK 2.5.0」を選択して「次へ」
+
+ライセンス同意を選択して「完了」でインストールを行う
+
+
+インストールが完了し、Eclipseの再起動が終わったら
+再度「ヘルプ」→「新規ソフトウェアのインストール」
+作業対象に以下のサイトを入力
+http://download.eclipse.org/efxclipse/updates-released/0.9.0/site
+
+「e(fx)clipse - install」→「e(fx)clipse ? IDE－Kepler」を選択して「次へ」
+
+ライセンス同意を選択して「完了」でインストールを行う
+
+インストールが完了し、Eclipseの再起動が終わったら
+「ウィンドウ」→「設定」→「JavaFX」と選択
+「SceneBuilder executable」にScene Builder の実行ファイルのパス（C:\Program Files\Oracle\JavaFX Scene Builder 2.0\JavaFX Scene Builder 2.0.exe）を入力する
+
+
+
+■インストール確認（Scene Builderで画面を作成して表示）
+「ファイル」→「新規」→「プロジェクト」でウィザードの選択画面が開くので
+「JavaFX」→「JavaFX Project」を選択して「次へ」
+
+Javaプロジェクトの選択画面が開くので、プロジェクト名に任意の名前を入力して「次へ」
+Java設定画面は何も変更せず「次へ」
+次の画面で言語を「FXML」を選択して完了を押すとプロジェクトが作成される
+
+srcフォルダ配下applicationパッケージ内にあるfxmlファイルを選択して右クリック「Open with SceneBuilder」でScene Builder を起動する
+
+まず左下のDocumentの「BorderPane」を選択して画面の大きさを調整する
+次に左上のLibraryのControlsから「Label」を選択してドラッグ＆ドロップで配置する
+適当に右側のPropertiesでText内容やFontや色を変更し、「File」→「Save」で保存する
+
+編集が終わってMain.javaを実行するとScene Builderで作成した画面が表示される
+
+
+
+サンプルプログラムMain.java
+1   package application;
+2   
+3   import javafx.application.Application;
+4   import javafx.stage.Stage;
+5   import javafx.scene.Scene;
+6   import javafx.scene.layout.BorderPane;
+7   import javafx.fxml.FXMLLoader;
+8   
+9   public class Main extends Application{
+10      @Override
+11      public void start(Stage primaryStage) {
+12          try {
+13    		BorderPane root =(BorderPane)FXMLLoader.load
+                                       (getClass().getResource("Sample.fxml"));
+14    		Scene scene = new Scene(root,400,400);
+15    		scene.getStylesheets().add
+　　　　　　　　　　(getClass().getResource("application.css").toExternalForm());
+16    		primaryStage.setScene(scene);
+17    		primaryStage.show();
+18   	    } catch(Exception e) {
+19    		e.printStackTrace();
+20    	    }
+21      }
+22      
+23      public static void main(String[] args) {  Scene scene = new Scene(root);
+24    	    launch(args);
+25      }
+26  }
+
+
+第5章 
+Tomcat
+5.1. Tomcatサーバ設定（Eclipse WTP）
+■Tomcatのダウンロード
+Windows環境にTomcatをインストールし、商用および試験環境として利用する
+
+公式サイトからダウンロードしてインストールを行う
+http://tomcat.apache.org/download-70.cgi
+
+今回はTomcatをWindowsのサービスとして常駐させたいので
+32-bit/64-bit Windows Service Installerをダウンロードする
+
+
+
+
+■Tomcatのインストール
+ダウンロードしたEXEファイルを実行する
+途中でJREを指定する画面があるのでインストール済みのJREを指定する
+
+※インストール場所についての注意
+WindowsVista/7 のC:\Program Files配下は管理者以外変更できない仕組みになっているのでC:\Program Files以外（例えばc:\Tomcat 7.0\等）にインストールする
+
+
+インストール終了後
+「スタート」→「すべてのプログラム」→「Apache Tomcat7.0 Tomcat7」→「Monitor Tomcat」
+「General」タブの「Service Status」の「Stop」ボタンで停止しておく
+
+
+
+■新規サーバの定義
+EclipseではWTP(Web Tools Platform)プラグインを利用することでWebアプリケーションの開発を行うことができる
+WTPで Tomcat を使えるようにするためには、 「新規サーバの定義」という操作を行う必要ある（新規サーバの定義は，Eclipse で１回行うだけでよい）
+Eclipse で「ウィンドウ」→「ビューの表示 」→「その他 」→「サーバー 」→「サーバー 」と操作
+「OK」をクリックすると， Eclipse ウィンドウの中にサーバービューが表示される
+
+リンクをクリックして新規サーバ画面を開く
+
+Apache Tomcat v7.0サーバを選択して「次へ」を押下すると
+Tomcatのインストールディレクトリを聞かれるので指定して「完了」を押す
+すると、サーバービューにサーバが表示される
+
+
+（SVNリポジトリからHelloのプロジェクトをチェックアウトする）
+
+
+作成されたサーバ選択して右クリックして「追加および除去」を選択
+対象プロジェクトを構成済みに追加して「完了」を押下する
+
+
+作成されたサーバ選択してサーバ起動ボタンを押下する
+
+サーバのアイコンが変化し起動済みになる
+
+
+ブラウザで
+http://localhost:8080/Hello/HelloServret
+を開くことでTomcatが起動していることを確認できる
+
+
+5.2. 
+Tomcatサーバ設定（Windows）
+■Tomcatの起動
+「スタート」→「すべてのプログラム」→「Apache Tomcat7.0 Tomcat7」→「Monitor Tomcat」
+「General」タブの「Service Status」の「Start」ボタンで起動する
+(事前にEclipseのサーバーは止めておく)
+
+
+ブラウザで
+http://localhost:8080/
+を開き、Tomcatが起動していることを確認する
+
+
+
+■WARファイルの作成
+Eclipse上で対象プロジェクトを選択し、「ファイル」→「エクスポート」を実行
+エクスポート先の選択で「Web」→「WARファイル」を選択して「次へ」
+?Webプロジェクト：プロジェクト名を入力（入力済み）
+?宛先：WARファイル出力先（C:\Tomcat 7.0￥webapps\Hello.war）
+?ターゲットランタイム：optimize for a specific server runtimeにチェック
+                       Tomcatのバージョンを選択
+既存ファイルの上書きの場合はチェックボックスを選択して「完了」
+
+■WARファイルの配置（デプロイ）
+WARファイルをwebapps配下にデプロイする
+
+
+
+
+
+
+
+
+
+
+デプロイが終わったら、ブラウザでアクセスできることを確認する。
+http://localhost:8080/Hello/HelloServret
+
